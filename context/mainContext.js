@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser } from "firebase/auth";
+// import { getAnalytics } from "firebase/analytics";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { getFirestore, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { getDatabase, ref, set, remove } from "firebase/database";
@@ -40,7 +40,7 @@ export const MainContextProvider = ({ children }) => {
     const router = useRouter()
     const [isDark, setIsDark] = useState(true)
     const [user, setUser] = useState(null)
-    const [friends, setFriends] = useState([])
+    const [friends, setFriends] = useState(null)
 
     //----------------------------------------------------------------------------------------
     // useEffect
@@ -94,12 +94,18 @@ export const MainContextProvider = ({ children }) => {
 
     // sign in
     const signin = (email, password) => {
-        signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            setUser(auth.currentUser);
-            console.log(`User signed in successfully!`)
-        }).catch((error) => {
-            console.log(`ErrorCode-${error.code}: ${error.message}`)
-        });
+        setPersistence(auth, browserSessionPersistence)
+            .then(() => {
+                return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+                    setUser(auth.currentUser);
+                    console.log(`User signed in successfully!`)
+                }).catch((error) => {
+                    console.log(`ErrorCode-${error.code}: ${error.message}`)
+                });
+            })
+            .catch((error) => {
+                console.log(`ErrorCode-${error.code}: ${error.message}`)
+            });
     }
 
     // log out
@@ -176,7 +182,7 @@ export const MainContextProvider = ({ children }) => {
     }
 
     // remove friend
-    const removeFriend = async (userId, newData)=>{
+    const removeFriend = async (userId, newData) => {
         await updateDoc(doc(db, "friends", userId), newData);
     }
 
@@ -203,8 +209,8 @@ export const MainContextProvider = ({ children }) => {
         });
         docRef = await setDoc(doc(db, "freinds", userId), {});
     }
-    createAndUpdateProfile(1,2,3,4,5)
-    
+    createAndUpdateProfile(1, 2, 3, 4, 5)
+
     //update user profile
     const updateProfile = async (userId, newData) => {
         await updateDoc(doc(db, "users", userId), newData);
@@ -214,7 +220,7 @@ export const MainContextProvider = ({ children }) => {
     const deleteProfile = async (userId) => {
         await deleteDoc(doc(db, "users", userId));
     }
-    
+
     // get user details by userId
     const getUserDetails = (userId) => {
         const unsubscribe = onSnapshot(
@@ -236,7 +242,10 @@ export const MainContextProvider = ({ children }) => {
         <MainContext.Provider value={{
             isDark,
             setIsDark,
-            router
+            router,
+            alertSuccess,
+            alertFailure,
+            signin
         }}>
             {children}
         </MainContext.Provider>
