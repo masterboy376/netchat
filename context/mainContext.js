@@ -27,7 +27,7 @@ export const MainContextProvider = ({ children }) => {
 
     // if (app.name && typeof window !== 'undefined') {
     //     const analytics = getAnalytics(app);
-    //     console.log(analytics)
+    //     alertFailure(analytics)
     // }
     // }
     const auth = getAuth(app);
@@ -56,7 +56,7 @@ export const MainContextProvider = ({ children }) => {
 
     //----------------------------------------------------------------------------------------
     // functions 
-    const alertSuccess = (message) => toast.success(success, {
+    const alertSuccess = (message) => toast.success(message, {
         position: "bottom-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -81,67 +81,86 @@ export const MainContextProvider = ({ children }) => {
     // functions
 
     // sign up
-    const signup = (email, password, file) => {
-        createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            setUser(auth.currentUser);
-            // const uploadTask  = uploadBytes(storageRef, file, {picOwner: auth.currentUser.uid})
-            // console.log(uploadTask)
-            console.log(`User created successfully!`)
-        }).catch((error) => {
-            console.log(`ErrorCode-${error.code}: ${error.message}`)
-        });
-    }
-
-    // sign in
-    const signin = (email, password) => {
+    const signUpRemember = ({ email, password, name, username }) => {
         setPersistence(auth, browserSessionPersistence)
             .then(() => {
-                return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-                    setUser(auth.currentUser);
-                    console.log(`User signed in successfully!`)
+                createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
+                    return createProfile(name, username, email, auth.currentUser.uid)
                 }).catch((error) => {
-                    console.log(`ErrorCode-${error.code}: ${error.message}`)
+                    alertFailure(`ErrorCode-${error.code}: ${error.message}`)
                 });
             })
             .catch((error) => {
-                console.log(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
             });
+    }
+
+    // sign up
+    const signUp = ({ email, password, name, username }) => {
+        createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            return createProfile(name, username, email, auth.currentUser.uid)
+        }).catch((error) => {
+            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+        });
+    }
+
+    // sign in remember
+    const signInRemember = ({email, password}) => {
+        setPersistence(auth, browserSessionPersistence)
+            .then(() => {
+                return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+                    alertSuccess(`User signed in successfully!`)
+                }).catch((error) => {
+                    alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+                });
+            })
+            .catch((error) => {
+                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+            });
+        }
+        
+        // sign in
+        const signIn = ({email, password}) => {
+        signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            alertSuccess(`User signed in successfully!`)
+        }).catch((error) => {
+            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+        });
     }
 
     // log out
     const logout = () => {
         signOut(auth).then(() => {
-            setUser(null)
-            console.log(`User logged out successfully!`)
+            alertSuccess(`User logged out successfully!`)
         }).catch((error) => {
-            console.log(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
         });
     }
 
     // reset
     const reset = (e) => {
         sendPasswordResetEmail(auth, cred.email).then(() => {
-            console.log(`Reset email sent successfully!`)
+            alertSuccess(`Reset email sent successfully!`)
         }).catch((error) => {
-            console.log(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
         });
     }
 
     // delete user
     const deleteAccount = (e) => {
         deleteUser(auth.currentUser).then(() => {
-            console.log(`User deleted successfully!`)
+            alertSuccess(`User deleted successfully!`)
         }).catch((error) => {
-            console.log(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
         });
     }
 
     // re authenticate
     const reAuth = (e) => {
         reauthenticateWithCredential(user, credential).then(() => {
-            console.log(`Reauthentication successfully!`)
+            alertSuccess(`Reauthentication successfully!`)
         }).catch((error) => {
-            console.log(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
         });
     }
 
@@ -149,10 +168,10 @@ export const MainContextProvider = ({ children }) => {
     // send friend request
     const sendFriendRequest = (to) => {
         set(ref(database, 'requests/' + to + user.uid), Date.now()).then(() => {
-            console.log(`Friend request sent successfully!`)
+            alertSuccess(`Friend request sent successfully!`)
         })
             .catch((error) => {
-                console.log(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
             });
     }
 
@@ -163,10 +182,10 @@ export const MainContextProvider = ({ children }) => {
         let docRef = await updateDoc(doc(db, "friends", user.uid), friendListUpdate);
         if (docRef !== null) {
             remove(ref(database, 'requests/' + to), user.uid).then(() => {
-                console.log(`Friend request accepted successfully!`)
+                alertSuccess(`Friend request accepted successfully!`)
             })
                 .catch((error) => {
-                    console.log(`ErrorCode-${error.code}: ${error.message}`)
+                    alertFailure(`ErrorCode-${error.code}: ${error.message}`)
                 });
         }
     }
@@ -174,10 +193,10 @@ export const MainContextProvider = ({ children }) => {
     // decline friend request
     const declineFriendRequest = (declinedUserId) => {
         remove(ref(database, 'requests/' + user.uid + declinedUserId)).then(() => {
-            console.log(`Friend request declined successfully!`)
+            alertSuccess(`Friend request declined successfully!`)
         })
             .catch((error) => {
-                console.log(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
             });
     }
 
@@ -194,22 +213,20 @@ export const MainContextProvider = ({ children }) => {
                 setFriends(snapshot.data())
             },
             (error) => {
-                console.log(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
             });
     }
 
     //----------------------------------------------------------------------------------------
     // create use profile
-    const createAndUpdateProfile = async (name, username, picUrl, email, userId) => {
-        let docRef = await updateDoc(doc(db, "users", userId), {
+    const createProfile = async (name, username, email, userId) => {
+        let docRef = await setDoc(doc(db, "users", userId), {
             name: name,
             username: username,
-            picUrl: picUrl,
-            sam: email
+            email: email
         });
         docRef = await setDoc(doc(db, "freinds", userId), {});
     }
-    createAndUpdateProfile(1, 2, 3, 4, 5)
 
     //update user profile
     const updateProfile = async (userId, newData) => {
@@ -229,7 +246,7 @@ export const MainContextProvider = ({ children }) => {
                 return snapshot.data()
             },
             (error) => {
-                console.log(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
             });
     }
 
@@ -245,7 +262,13 @@ export const MainContextProvider = ({ children }) => {
             router,
             alertSuccess,
             alertFailure,
-            signin
+            signIn,
+            signUp,
+            signInRemember,
+            signUpRemember,
+            logout,
+            createProfile,
+            auth
         }}>
             {children}
         </MainContext.Provider>
