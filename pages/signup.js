@@ -13,11 +13,11 @@ const signup = () => {
   const [cpassword, setCpassword] = useState('')
   const [remember, setRemember] = useState(true)
 
-  useEffect(() => {
-    if(auth.currentUser){
-      router.push('/')
-    }
-  }, [])
+  // useEffect(() => {
+  //   if(auth.currentUser){
+  //     router.push('/')
+  //   }
+  // }, [auth.currentUser])
 
   const onChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value })

@@ -38,9 +38,11 @@ export const MainContextProvider = ({ children }) => {
     // const storageRef = ref(storage)
 
     const router = useRouter()
-    const [isDark, setIsDark] = useState(true)
+    const [isDark, setIsDark] = useState(false)
     const [user, setUser] = useState(null)
     const [friends, setFriends] = useState(null)
+    const [isLeftBar, setIsLeftBar] = useState(false)
+    const [isRightBar, setIsRightBar] = useState(false)
 
     //----------------------------------------------------------------------------------------
     // useEffect
@@ -109,6 +111,7 @@ export const MainContextProvider = ({ children }) => {
         setPersistence(auth, browserSessionPersistence)
             .then(() => {
                 return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            router.push('/')
                     alertSuccess(`User signed in successfully!`)
                 }).catch((error) => {
                     alertFailure(`ErrorCode-${error.code}: ${error.message}`)
@@ -122,6 +125,7 @@ export const MainContextProvider = ({ children }) => {
         // sign in
         const signIn = ({email, password}) => {
         signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            router.push('/')
             alertSuccess(`User signed in successfully!`)
         }).catch((error) => {
             alertFailure(`ErrorCode-${error.code}: ${error.message}`)
@@ -131,6 +135,7 @@ export const MainContextProvider = ({ children }) => {
     // log out
     const logout = () => {
         signOut(auth).then(() => {
+            router.push('/signin')
             alertSuccess(`User logged out successfully!`)
         }).catch((error) => {
             alertFailure(`ErrorCode-${error.code}: ${error.message}`)
@@ -268,7 +273,11 @@ export const MainContextProvider = ({ children }) => {
             signUpRemember,
             logout,
             createProfile,
-            auth
+            auth,
+            isLeftBar,
+            setIsLeftBar,
+            isRightBar,
+            setIsRightBar
         }}>
             {children}
         </MainContext.Provider>

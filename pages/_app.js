@@ -1,4 +1,5 @@
 import '../styles/globals.css'
+import '../styles/custom.css'
 import { MainContextProvider } from '../context/mainContext'
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
