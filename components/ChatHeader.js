@@ -10,19 +10,6 @@ import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
 const ChatHeader = () => {
-  // const styles = {
-  //   chatHeader: 'fixed top-0 right-0 w-full bg-opacity-70 backdrop-blur-sm sm:w-4/5 z-50 bg-gray-900 flex items-center justify between sm:p-2 p-3 border-b border-gray-700 shadow-sm z-10',
-  //   roomNameContainer: 'flex items-center flex-1',
-  //   svg: 'w-6 invert opacity-60 cursor-pointer mr-2',
-  //   roomName: 'sm:text-base text-sm',
-  //   button: 'mx-2 bg-blue-600 border border-blue-600 hover:border-blue-700 hover:bg-blue-700 p-2 rounded-xl cursor-pointer hidden sm:inline px-4',
-  //   separator: 'mx-2',
-  //   headerIconsContainer: 'group flex items-center',
-  //   headerItem: 'mx-2 hidden sm:flex flex-col items-center',
-  //   headerItemDesc: 'group-hover:opacity-100 absolute hidden z-30 bg-[#2f3136] border border-gray-900 p-1 text-sm rounded-xl top-14 right-[][4000px]',
-  //   icon: 'text-white opacity-60 cursor-pointer mr-2 sm:hidden'
-
-  // }
   const { setIsLeftBar, setIsRightBar, logout, isDark } = useContext(MainContext)
 
   // const init = async ()=>{
@@ -41,7 +28,7 @@ const ChatHeader = () => {
 
 
   return (
-    <div className={`fixed z-10 top-0 right-0 w-full sm:w-3/4 bg-opacity-70 backdrop-blur-sm flex items-center justify between sm:p-2 p-3 border-b ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+    <div className={`fixed z-10 top-0 right-0 w-full sm:w-3/4 bg-opacity-70 backdrop-blur-sm flex items-center justify between sm:p-2 p-3 border-b ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'} shadow-sm`}>
 
       <button type='button' onClick={() => { setIsLeftBar(true) }} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer mr-2 sm:hidden`}>
         <HiMenuAlt2 size={24} />
@@ -97,7 +84,7 @@ const ChatHeader = () => {
         </button>
       </Tippy>
 
-      <button type='button' className={`mx-2 text-white bg-blue-600 hover:bg-blue-700 font-medium p-2 rounded-xl cursor-pointer hidden sm:inline px-4`} onClick={logout}>
+      <button type='button' className={`mx-2 text-white bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 border font-medium py-2 rounded-xl cursor-pointer hidden sm:inline px-4`} onClick={logout}>
         Log out
       </button>
 

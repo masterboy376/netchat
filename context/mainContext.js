@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
-import { getFirestore, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
+import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove } from "firebase/firestore";
 import { getDatabase, ref, set, remove } from "firebase/database";
 import { toast } from 'react-toastify';
 
@@ -39,23 +39,30 @@ export const MainContextProvider = ({ children }) => {
 
     const router = useRouter()
     const [isDark, setIsDark] = useState(false)
-    const [user, setUser] = useState(null)
     const [friends, setFriends] = useState(null)
     const [isLeftBar, setIsLeftBar] = useState(false)
     const [isRightBar, setIsRightBar] = useState(false)
 
     //----------------------------------------------------------------------------------------
     // useEffect
-    useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUser(user)
-            } else {
-                setUser(null)
-            }
-        })
-    }, []);
-
+    // useEffect(() => {
+    //     if(!auth.currentUser){
+    //       router.push('/signin')
+    //     }
+    //     else{
+    //         router.push('/')
+    //     }
+    // }, [auth])
+    // onAuthStateChanged(auth, (user) => {
+    //     if (user) {
+    //         router.push('/')
+    //         // acceptFriendRequest('y0HJI8VwwhS9spppK7cbwy1nL022')
+    //     } else {
+    //         router.push('/signin')
+    //     }
+    // })
+    // useEffect(() => {
+    // }, []);
     //----------------------------------------------------------------------------------------
     // functions 
     const alertSuccess = (message) => toast.success(message, {
@@ -79,9 +86,6 @@ export const MainContextProvider = ({ children }) => {
         style: { 'backgroundColor': `${isDark ? '#1f2937' : '#f1f5f9'}`, 'color': `${isDark ? 'white' : '#111827'}` }
     });
 
-    //----------------------------------------------------------------------------------------
-    // functions
-
     // sign up
     const signUpRemember = ({ email, password, name, username }) => {
         setPersistence(auth, browserSessionPersistence)
@@ -89,11 +93,11 @@ export const MainContextProvider = ({ children }) => {
                 createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
                     return createProfile(name, username, email, auth.currentUser.uid)
                 }).catch((error) => {
-                    alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+                    alertFailure(`${error.message}`)
                 });
             })
             .catch((error) => {
-                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`${error.message}`)
             });
     }
 
@@ -102,33 +106,33 @@ export const MainContextProvider = ({ children }) => {
         createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             return createProfile(name, username, email, auth.currentUser.uid)
         }).catch((error) => {
-            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`${error.message}`)
         });
     }
 
     // sign in remember
-    const signInRemember = ({email, password}) => {
+    const signInRemember = ({ email, password }) => {
         setPersistence(auth, browserSessionPersistence)
             .then(() => {
                 return signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            router.push('/')
+                    router.push('/')
                     alertSuccess(`User signed in successfully!`)
                 }).catch((error) => {
-                    alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+                    alertFailure(`${error.message}`)
                 });
             })
             .catch((error) => {
-                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`${error.message}`)
             });
-        }
-        
-        // sign in
-        const signIn = ({email, password}) => {
+    }
+
+    // sign in
+    const signIn = ({ email, password }) => {
         signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
             router.push('/')
             alertSuccess(`User signed in successfully!`)
         }).catch((error) => {
-            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`${error.message}`)
         });
     }
 
@@ -138,7 +142,7 @@ export const MainContextProvider = ({ children }) => {
             router.push('/signin')
             alertSuccess(`User logged out successfully!`)
         }).catch((error) => {
-            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`${error.message}`)
         });
     }
 
@@ -147,7 +151,7 @@ export const MainContextProvider = ({ children }) => {
         sendPasswordResetEmail(auth, cred.email).then(() => {
             alertSuccess(`Reset email sent successfully!`)
         }).catch((error) => {
-            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`${error.message}`)
         });
     }
 
@@ -156,58 +160,85 @@ export const MainContextProvider = ({ children }) => {
         deleteUser(auth.currentUser).then(() => {
             alertSuccess(`User deleted successfully!`)
         }).catch((error) => {
-            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`${error.message}`)
         });
     }
 
     // re authenticate
     const reAuth = (e) => {
-        reauthenticateWithCredential(user, credential).then(() => {
+        reauthenticateWithCredential(auth.currentUser, credential).then(() => {
             alertSuccess(`Reauthentication successfully!`)
         }).catch((error) => {
-            alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+            alertFailure(`${error.message}`)
         });
     }
 
     //----------------------------------------------------------------------------------------
     // send friend request
-    const sendFriendRequest = (to) => {
-        set(ref(database, 'requests/' + to + user.uid), Date.now()).then(() => {
-            alertSuccess(`Friend request sent successfully!`)
-        })
-            .catch((error) => {
-                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
-            });
-    }
-
-    // accept friend request
-    const acceptFriendRequest = async (acceptedUserId) => {
-        const friendListUpdate = {}
-        friendListUpdate[`${acceptedUserId}`] = Date.now
-        let docRef = await updateDoc(doc(db, "friends", user.uid), friendListUpdate);
-        if (docRef !== null) {
-            remove(ref(database, 'requests/' + to), user.uid).then(() => {
-                alertSuccess(`Friend request accepted successfully!`)
-            })
-                .catch((error) => {
-                    alertFailure(`ErrorCode-${error.code}: ${error.message}`)
-                });
+    const sendFriendRequest = async (userId, to) => {
+        const docRef = await addDoc(collection(db, "requests"), {
+            from: userId,
+            to: to
+        });
+        if (docRef != null) {
+            alertSuccess("Friend request sent successfully!")
+        }
+        else {
+            alertSuccess("Failed to send friend request!")
         }
     }
 
+    // accept friend request
+    const acceptFriendRequest = async (requestId) => {
+        let docRef = null;
+        const requestRef = doc(db, "requests", requestId);
+        const requestSnap = await getDoc(requestRef);
+        docRef = await updateDoc(doc(db, "users", auth.currentUser.uid), {
+            friends: arrayUnion(requestSnap.data().from)
+        });
+        docRef = await updateDoc(doc(db, "users", requestSnap.data().from), {
+            friends: arrayUnion(auth.currentUser.uid)
+        });
+        if (docRef !== null) {
+            docRef = await deleteDoc(requestRef);
+            if (docRef !== null) {
+                alertSuccess('Successfully accepted friend request!')
+            }
+            else {
+                alertFailure(`Failed to accept friend request!`)
+            }
+        }
+        else {
+            alertFailure(`Failed to accept friend request!`)
+        }
+    }
+
+
     // decline friend request
-    const declineFriendRequest = (declinedUserId) => {
-        remove(ref(database, 'requests/' + user.uid + declinedUserId)).then(() => {
-            alertSuccess(`Friend request declined successfully!`)
-        })
-            .catch((error) => {
-                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
-            });
+    const declineFriendRequest = async (requestId) => {
+        const requestRef = doc(db, "requests", requestId);
+        let docRef = null;
+        docRef = await deleteDoc(requestRef);
+        if (docRef !== null) {
+            alertSuccess('Successfully accepted friend request!')
+        }
+        else {
+            alertFailure(`Failed to accept friend request!`)
+        }
     }
 
     // remove friend
-    const removeFriend = async (userId, newData) => {
-        await updateDoc(doc(db, "friends", userId), newData);
+    const removeFriend = async (userId, removedFriendId) => {
+        let docRef = null;
+        docRef = await updateDoc(doc(db, "users", userId), {
+            friends: arrayRemove(removedFriendId)
+        });
+        if (docRef != null) {
+            alertSuccess(`Successfully removed the friend!`)
+        }
+        else {
+            alertFailure(`Failed to remove the friend!`)
+        }
     }
 
     // get users friends
@@ -218,7 +249,7 @@ export const MainContextProvider = ({ children }) => {
                 setFriends(snapshot.data())
             },
             (error) => {
-                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`${error.message}`)
             });
     }
 
@@ -228,9 +259,21 @@ export const MainContextProvider = ({ children }) => {
         let docRef = await setDoc(doc(db, "users", userId), {
             name: name,
             username: username,
-            email: email
+            email: email,
+            friends: []
         });
-        docRef = await setDoc(doc(db, "freinds", userId), {});
+        if (docRef != null) {
+            docRef = await setDoc(doc(db, "freinds", userId), null);
+            if (docRef != null) {
+                alertSuccess("Profile created successfully.")
+            }
+            else {
+                alertFailure("Failed to create user profile.")
+            }
+        }
+        else {
+            alertFailure("Failed to create user profile.")
+        }
     }
 
     //update user profile
@@ -251,7 +294,7 @@ export const MainContextProvider = ({ children }) => {
                 return snapshot.data()
             },
             (error) => {
-                alertFailure(`ErrorCode-${error.code}: ${error.message}`)
+                alertFailure(`${error.message}`)
             });
     }
 

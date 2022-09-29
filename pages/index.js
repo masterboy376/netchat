@@ -8,12 +8,6 @@ import SideBar from '../components/SideBar'
 
 export default function Home() {
   const { logout, auth, router, isDark, isLeftBar } = useContext(MainContext)
-
-  useEffect(() => {
-    if(!auth.currentUser){
-      router.push('/signin')
-    }
-  }, [])
   
   return (
     <>
