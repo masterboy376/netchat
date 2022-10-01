@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AiOutlineClose, AiOutlineLoading3Quarters } from 'react-icons/ai'
 import React, { useContext } from 'react'
 import { MainContext } from '../context/mainContext'
-// import FriendCard from './FriendCard'
+import FriendCard from './FriendCard'
 import { FaUserPlus } from 'react-icons/fa'
 
 
@@ -16,12 +16,8 @@ const FriendList = () => {
 
   useEffect(() => {
     setLoadingFriends(true)
-    if (auth.currentUser && friends) {
-      if (friends.length != 0) {
+    if (friends) {
         setFriendsArray([...friends])
-        console.log([...friends])
-        console.log(friendsArray)
-      }
     }
     setLoadingFriends(false)
   }, [friends])
@@ -31,10 +27,9 @@ const FriendList = () => {
   }
 
   useEffect(() => {
-    if (auth.currentUser && friends) {
+    if (friends) {
       if (friends.length != 0) {
         if (searchValue.length != 0) {
-          console.log(friendsArray)
           let arr = [...friends]
           for (let i = friends.length - 1; i >= 0; i--) {
             if (friends[i].name.toLowerCase().includes(searchValue.toLowerCase()) || friends[i].username.toLowerCase().includes(searchValue.toLowerCase())) {
@@ -72,21 +67,23 @@ const FriendList = () => {
 
 
         {
-          (auth.currentUser && friends) &&
-          friendsArray.length>0 ?
-            // friends.map((item) => {
-            //   return <FriendCard key={item.username} name={item.name} username={item.username} avatarColor={item.avatarColor} />
-            // })
-            <></>
-            :
-            <>
-              {
+          friends && <>
+            {
+              friendsArray.length != 0 ?
+                friendsArray.map((item) => {
+                  return <FriendCard key={item.email} name={item.name} username={item.username} />
+                })
+                :
+                <>
+                  {
                 loadingFriends ?
                   <AiOutlineLoading3Quarters className='animate-spin mx-auto my-4 opacity-60' size={24} />
                   :
                   <div className={`text-center font-bold my-4 opacity-40 text-sm`}>No friend found!</div>
               }
-            </>
+                </>
+            }
+          </>
         }
 
 

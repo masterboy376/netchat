@@ -228,7 +228,6 @@ export const MainContextProvider = ({ children }) => {
                     let userRef = onSnapshot(
                         doc(db, "users", element),
                         (userDetails) => {
-                            console.log(userDetails.data())
                             arr.push(userDetails.data())
                         },
                         (error) => {
