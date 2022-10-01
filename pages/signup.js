@@ -6,18 +6,20 @@ import { MainContext } from '../context/mainContext'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 
 const signup = () => {
-  const { signUp, signUpRemember, alertFailure, isDark, auth, router } = useContext(MainContext)
+  const { signUp, signUpRemember, alertFailure, isDark, auth, router, onAuthStateChanged } = useContext(MainContext)
 
   const [signingup, setSigningup] = useState(false)
   const [credentials, setCredentials] = useState({ email: '', password: '', name: '', username: '' })
   const [cpassword, setCpassword] = useState('')
   const [remember, setRemember] = useState(true)
 
-  // useEffect(() => {
-  //   if(auth.currentUser){
-  //     router.push('/')
-  //   }
-  // }, [auth.currentUser])
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+          if (user) {
+              router.push('/')
+          }
+      })
+  }, [])
 
   const onChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value })

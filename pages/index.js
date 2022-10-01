@@ -7,8 +7,24 @@ import ChatView from '../components/ChatView'
 import SideBar from '../components/SideBar'
 
 export default function Home() {
-  const { logout, auth, router, isDark, isLeftBar } = useContext(MainContext)
-  
+  const { auth, router, isDark, isLeftBar, onAuthStateChanged, getUserFriends } = useContext(MainContext)
+
+  const init = async ()=>{
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push('/signin')
+      }
+      else {
+        getUserFriends(auth.currentUser.uid)
+      }
+    })
+  }
+
+  useEffect(() => {
+    init()
+  }, [])
+
+
   return (
     <>
       <Head>
@@ -17,7 +33,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.svg" />
       </Head>
 
-      <div className={`w-full min-h-screen ${isDark?'bg-gray-900 text-gray-300':'bg-white text-gray-900'}`}>
+      <div className={`w-full min-h-screen ${isDark ? 'bg-gray-900 text-gray-300' : 'bg-white text-gray-900'}`}>
         {auth.currentUser &&
           <>
             <div className={`absolute z-50 top-0 left-0 w-full sm:w-1/4 transition-all duration-300 sm:z-0 ${isLeftBar ? '-translate-x-0' : '-translate-x-full'} sm:-translate-x-0 h-screen`}>
@@ -26,7 +42,7 @@ export default function Home() {
             <div className={`absolute z-0 top-0 right-0 w-full sm:w-3/4 h-screen`}>
               <ChatView />
             </div>
-            <SideBar/>
+            <SideBar />
           </>
         }
       </div>

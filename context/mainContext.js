@@ -4,7 +4,7 @@ import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
-import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove } from "firebase/firestore";
+import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection } from "firebase/firestore";
 import { getDatabase, ref, set, remove } from "firebase/database";
 import { toast } from 'react-toastify';
 
@@ -46,23 +46,10 @@ export const MainContextProvider = ({ children }) => {
     //----------------------------------------------------------------------------------------
     // useEffect
     // useEffect(() => {
-    //     if(!auth.currentUser){
-    //       router.push('/signin')
+    //     if(auth.currentUser){
+    //         getUserFriends(auth.currentUser.uid)
     //     }
-    //     else{
-    //         router.push('/')
-    //     }
-    // }, [auth])
-    // onAuthStateChanged(auth, (user) => {
-    //     if (user) {
-    //         router.push('/')
-    //         // acceptFriendRequest('y0HJI8VwwhS9spppK7cbwy1nL022')
-    //     } else {
-    //         router.push('/signin')
-    //     }
-    // })
-    // useEffect(() => {
-    // }, []);
+    // }, [auth]);
     //----------------------------------------------------------------------------------------
     // functions 
     const alertSuccess = (message) => toast.success(message, {
@@ -176,77 +163,79 @@ export const MainContextProvider = ({ children }) => {
     //----------------------------------------------------------------------------------------
     // send friend request
     const sendFriendRequest = async (userId, to) => {
-        const docRef = await addDoc(collection(db, "requests"), {
-            from: userId,
-            to: to
-        });
-        if (docRef != null) {
+        try {
+            const docRef = await addDoc(collection(db, "requests"), {
+                from: userId,
+                to: to
+            });
             alertSuccess("Friend request sent successfully!")
-        }
-        else {
+        } catch (e) {
             alertSuccess("Failed to send friend request!")
         }
     }
 
     // accept friend request
-    const acceptFriendRequest = async (requestId) => {
-        let docRef = null;
-        const requestRef = doc(db, "requests", requestId);
-        const requestSnap = await getDoc(requestRef);
-        docRef = await updateDoc(doc(db, "users", auth.currentUser.uid), {
-            friends: arrayUnion(requestSnap.data().from)
-        });
-        docRef = await updateDoc(doc(db, "users", requestSnap.data().from), {
-            friends: arrayUnion(auth.currentUser.uid)
-        });
-        if (docRef !== null) {
+    const acceptFriendRequest = async (userId, requestId) => {
+        try {
+            const requestRef = doc(db, "requests", requestId);
+            const requestSnap = await getDoc(requestRef);
+            let docRef = await updateDoc(doc(db, "users", userId), {
+                friends: arrayUnion(requestSnap.data().from)
+            });
+            docRef = await updateDoc(doc(db, "users", requestSnap.data().from), {
+                friends: arrayUnion(userId)
+            });
             docRef = await deleteDoc(requestRef);
-            if (docRef !== null) {
-                alertSuccess('Successfully accepted friend request!')
-            }
-            else {
-                alertFailure(`Failed to accept friend request!`)
-            }
+            alertSuccess('Successfully accepted friend request!')
         }
-        else {
+        catch (e) {
             alertFailure(`Failed to accept friend request!`)
         }
     }
 
-
     // decline friend request
     const declineFriendRequest = async (requestId) => {
-        const requestRef = doc(db, "requests", requestId);
-        let docRef = null;
-        docRef = await deleteDoc(requestRef);
-        if (docRef !== null) {
+        try {
+            const requestRef = doc(db, "requests", requestId);
+            let docRef = null;
+            docRef = await deleteDoc(requestRef);
             alertSuccess('Successfully accepted friend request!')
         }
-        else {
+        catch (e) {
             alertFailure(`Failed to accept friend request!`)
         }
     }
 
     // remove friend
     const removeFriend = async (userId, removedFriendId) => {
-        let docRef = null;
-        docRef = await updateDoc(doc(db, "users", userId), {
-            friends: arrayRemove(removedFriendId)
-        });
-        if (docRef != null) {
+        try {
+            let docRef = docRef = await updateDoc(doc(db, "users", userId), {
+                friends: arrayRemove(removedFriendId)
+            });
             alertSuccess(`Successfully removed the friend!`)
-        }
-        else {
+        } catch (error) {
             alertFailure(`Failed to remove the friend!`)
         }
     }
 
     // get users friends
     const getUserFriends = (userId) => {
-        const unsubscribe = onSnapshot(
-            collection(db, "friends", userId),
-            (snapshot) => {
-                setFriends(snapshot.data())
+        let friendRef = onSnapshot(
+            doc(db, "users", userId),
+            (userFriends) => {
+                let arr = []
+                userFriends.data().friends.forEach(element => {
+                    let userRef = onSnapshot(
+                        doc(db, "users", element),
+                        (userDetails) => {
+                            console.log(userDetails.data())
+                            arr.push(userDetails.data())
+                        },
+                        (error) => {
+                            alertFailure(`${error.message}`)
+                        })
+                });
+                setFriends(arr)
             },
             (error) => {
                 alertFailure(`${error.message}`)
@@ -256,46 +245,52 @@ export const MainContextProvider = ({ children }) => {
     //----------------------------------------------------------------------------------------
     // create use profile
     const createProfile = async (name, username, email, userId) => {
-        let docRef = await setDoc(doc(db, "users", userId), {
-            name: name,
-            username: username,
-            email: email,
-            friends: []
-        });
-        if (docRef != null) {
-            docRef = await setDoc(doc(db, "freinds", userId), null);
-            if (docRef != null) {
-                alertSuccess("Profile created successfully.")
-            }
-            else {
-                alertFailure("Failed to create user profile.")
-            }
+        try {
+            let docRef = await setDoc(doc(db, "users", userId), {
+                name: name,
+                username: username,
+                email: email,
+                friends: []
+            });
+            alertSuccess("Profile created successfully.")
         }
-        else {
-            alertFailure("Failed to create user profile.")
+        catch (e) {
+            alertFailure("Failed to create user profile .")
         }
     }
 
     //update user profile
     const updateProfile = async (userId, newData) => {
-        await updateDoc(doc(db, "users", userId), newData);
+        try {
+            await updateDoc(doc(db, "users", userId), newData);
+            alertSuccess("Profile updated successfully.")
+        } catch (e) {
+            alertFailure("Failed to update user profile.")
+        }
     }
 
     //delete user profile
     const deleteProfile = async (userId) => {
-        await deleteDoc(doc(db, "users", userId));
+        try {
+            await deleteDoc(doc(db, "users", userId));
+            alertSuccess('Profile deleted successfully!')
+        }
+        catch (e) {
+            alertFailure('Failed to delete the profile!')
+        }
     }
 
     // get user details by userId
     const getUserDetails = (userId) => {
         const unsubscribe = onSnapshot(
-            collection(db, "friends", userId),
+            doc(db, "users", userId),
             (snapshot) => {
+                console.log(snapshot.data())
                 return snapshot.data()
             },
             (error) => {
                 alertFailure(`${error.message}`)
-            });
+            })
     }
 
     //----------------------------------------------------------------------------------------
@@ -305,6 +300,8 @@ export const MainContextProvider = ({ children }) => {
 
     return (
         <MainContext.Provider value={{
+            friends,
+            setFriends,
             isDark,
             setIsDark,
             router,
@@ -320,7 +317,12 @@ export const MainContextProvider = ({ children }) => {
             isLeftBar,
             setIsLeftBar,
             isRightBar,
-            setIsRightBar
+            setIsRightBar,
+            onAuthStateChanged,
+            sendFriendRequest,
+            acceptFriendRequest,
+            getUserFriends,
+            getUserDetails
         }}>
             {children}
         </MainContext.Provider>

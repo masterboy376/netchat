@@ -6,17 +6,19 @@ import { MainContext } from '../context/mainContext'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 
 const signin = () => {
-  const { signIn, signInRemember, isDark, auth, router } = useContext(MainContext)
+  const { signIn, signInRemember, isDark, auth, router, onAuthStateChanged } = useContext(MainContext)
 
   const [signingin, setSigningin] = useState(false)
   const [credentials, setCredentials] = useState({ email: '', password: '' })
   const [remember, setRemember] = useState(true)
 
-  // useEffect(() => {
-  //   if(auth.currentUser){
-  //     router.push('/')
-  //   }
-  // }, [auth.currentUser])
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+          if (user) {
+              router.push('/')
+          }
+      })
+  }, [])
 
   const onChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value })
