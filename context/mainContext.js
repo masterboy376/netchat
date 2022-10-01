@@ -38,7 +38,7 @@ export const MainContextProvider = ({ children }) => {
     // const storageRef = ref(storage)
 
     const router = useRouter()
-    const [isDark, setIsDark] = useState(false)
+    const [isDark, setIsDark] = useState(true)
     const [friends, setFriends] = useState(null)
     const [isLeftBar, setIsLeftBar] = useState(false)
     const [isRightBar, setIsRightBar] = useState(false)

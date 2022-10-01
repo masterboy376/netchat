@@ -5,7 +5,7 @@ import {FaUserTimes, FaPhoneVolume, FaVideo } from 'react-icons/fa'
 const FriendCard = ({ username, name }) => {
     const { router, isDark } = useContext(MainContext)
     return (
-        <div onClick={() => { router.push(`/?user=${username}`) }} className={`flex items-center p-2 rounded-xl ${isDark ? 'hover:bg-gray-800 bg-zinc-900' : 'hover:bg-gray-200 bg-slate-100'} cursor-pointer my-1`}>
+        <div onClick={() => { router.push(`/?user=${username}`) }} className={`flex items-center p-2 rounded-xl ${isDark ? 'hover:bg-gray-800 bg-slate-900' : 'hover:bg-gray-200 bg-slate-100'} cursor-pointer my-1`}>
             <div className={`mr-2 flex items-center rounded-full w-10 h-10 justify-center font-bold text-2xl bg-blue-500`}>
                 {name[0].toUpperCase()}
             </div>
