@@ -7,15 +7,12 @@ import ChatView from '../components/ChatView'
 import SideBar from '../components/SideBar'
 
 export default function Home() {
-  const { auth, router, isDark, isLeftBar, onAuthStateChanged, getUserFriends } = useContext(MainContext)
+  const { auth, router, isDark, isLeftBar, onAuthStateChanged } = useContext(MainContext)
 
   const init = async ()=>{
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         router.push('/signin')
-      }
-      else {
-        getUserFriends(auth.currentUser.uid)
       }
     })
   }

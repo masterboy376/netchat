@@ -45,12 +45,32 @@ export const MainContextProvider = ({ children }) => {
     const [messages, setMessage] = useState([])
 
     //----------------------------------------------------------------------------------------
-    // useEffect
-    // useEffect(() => {
-    //     if(auth.currentUser){
-    //         getUserFriends(auth.currentUser.uid)
-    //     }
-    // }, [auth]);
+    useEffect
+    useEffect(() => {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                let friendRef = onSnapshot(
+                    doc(db, "users", auth.currentUser.uid),
+                    (userFriends) => {
+                        let arr = []
+                        userFriends.data().friends.forEach((element) => {
+                            let userRef = onSnapshot(
+                                doc(db, "users", element),
+                                (userDetails) => {
+                                    arr.push(userDetails.data())
+                                },
+                                (error) => {
+                                    alertFailure(`${error.message}`)
+                                })
+                        });
+                        setFriends(arr)
+                    },
+                    (error) => {
+                        alertFailure(`${error.message}`)
+                    });
+            }
+          })
+    }, [auth, friends]);
     //----------------------------------------------------------------------------------------
     // functions 
     const alertSuccess = (message) => toast.success(message, {
@@ -234,7 +254,7 @@ export const MainContextProvider = ({ children }) => {
             doc(db, "users", userId),
             (userFriends) => {
                 let arr = []
-                userFriends.data().friends.forEach(element => {
+                userFriends.data().friends.forEach((element) => {
                     let userRef = onSnapshot(
                         doc(db, "users", element),
                         (userDetails) => {
