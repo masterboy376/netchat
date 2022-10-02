@@ -1,6 +1,6 @@
 import Image from 'next/image'
 // import at from '../public/icons/at.svg'
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { MainContext } from '../context/mainContext'
 import { HiMenuAlt2 } from 'react-icons/hi'
 import { BsThreeDotsVertical } from 'react-icons/bs'
@@ -10,21 +10,19 @@ import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
 const ChatHeader = () => {
-  const { setIsLeftBar, setIsRightBar, logout, isDark } = useContext(MainContext)
+  const { setIsLeftBar, setIsRightBar, logout, isDark, friends, getUserDetails, router } = useContext(MainContext)
+  const [friendDetails, setFriendDetails] = useState(null)
 
-  // const init = async ()=>{
-  //   let parsedData = await getUserByUsername(router.query.user)
-  //   if (parsedData.success){
-  //     setFriend(parsedData.user)
-  //   }
-  //   else{
-  //     setFriend({status:false})
-  //   }
-  // }
+  useEffect(() => {
+    if (friends) {
+      friends.forEach(element => {
+        if (element.uid == router.query.uid) {
+          setFriendDetails(element)
+        }
+      });
+    }
+  }, [router, friends])
 
-  // useEffect(() => {
-  //   init()
-  // }, [router.query.user])
 
 
   return (
@@ -35,13 +33,17 @@ const ChatHeader = () => {
       </button>
 
       <div className={`flex items-center flex-1`}>
-        {/* {router.query.user &&
-          <>
-            <Image height={20} width={20} src={at} className={styles.svg} alt='' />
-            <h3 className={styles.title}>{router.query.user}</h3>
-            <div className={`ml-2 rounded-full p-1 ${friend.status?'bg-green-600':'bg-gray-700'} border-gray-700 border-4`} />
+        {
+          friendDetails && <>
+            <div className={`mr-2 flex items-center rounded-full w-8 h-8 sm:w-10 sm:h-10 justify-center font-bold text-2xl bg-blue-500`}>
+              {friendDetails.name[0].toUpperCase()}
+            </div>
+            <div className={`flex-1 h-full opacity-90`}>
+              <p className={`font-bold text-sm`}>{friendDetails.username}</p>
+              <p className={`opacity-60 text-sm`}>{friendDetails.name}</p>
+            </div>
           </>
-        } */}
+        }
       </div>
 
       {/* {router.query.user &&

@@ -4,8 +4,8 @@ import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
-import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection } from "firebase/firestore";
-import { getDatabase, ref, set, remove } from "firebase/database";
+import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, collectionGroup, getDocs } from "firebase/firestore";
+import { getDatabase, ref, set, remove, query, push, child } from "firebase/database";
 import { toast } from 'react-toastify';
 
 export const MainContext = React.createContext()
@@ -42,6 +42,7 @@ export const MainContextProvider = ({ children }) => {
     const [friends, setFriends] = useState(null)
     const [isLeftBar, setIsLeftBar] = useState(false)
     const [isRightBar, setIsRightBar] = useState(false)
+    const [messages, setMessage] = useState([])
 
     //----------------------------------------------------------------------------------------
     // useEffect
@@ -72,6 +73,15 @@ export const MainContextProvider = ({ children }) => {
         progress: undefined,
         style: { 'backgroundColor': `${isDark ? '#1f2937' : '#f1f5f9'}`, 'color': `${isDark ? 'white' : '#111827'}` }
     });
+    const validateAction = (userId) => {
+        let flag = false;
+        friends.forEach((item) => {
+            if (item.uid == userId) {
+                flag = true;
+            }
+        })
+        return flag;
+    }
 
     // sign up
     const signUpRemember = ({ email, password, name, username }) => {
@@ -246,6 +256,7 @@ export const MainContextProvider = ({ children }) => {
     const createProfile = async (name, username, email, userId) => {
         try {
             let docRef = await setDoc(doc(db, "users", userId), {
+                uid: userId,
                 name: name,
                 username: username,
                 email: email,
@@ -293,6 +304,30 @@ export const MainContextProvider = ({ children }) => {
     }
 
     //----------------------------------------------------------------------------------------
+    const sendMessage = async (from, to, content, sentAt) => {
+        try {
+            let docRef = await addDoc(collection(db, "messages"), {
+                from: from,
+                to: to,
+                content: content,
+                sentAt: sentAt
+            });
+        }
+        catch (e) {
+            alertFailure("Failed to send message.")
+            alertFailure(e)
+        }
+    }
+
+    const fetchMessages = async () => {
+        const museums = query(collectionGroup(db, 'messages'), where('type', '==', 'museum'));
+        const querySnapshot = await getDocs(museums);
+        querySnapshot.forEach((doc) => {
+            console.log(doc.id, ' => ', doc.data());
+        });
+    }
+
+    //----------------------------------------------------------------------------------------
     // const uploadFile = async (file, metadata)=>{
     //     constuploadBytes(storageRef, file, metadata);
     // }
@@ -321,7 +356,9 @@ export const MainContextProvider = ({ children }) => {
             sendFriendRequest,
             acceptFriendRequest,
             getUserFriends,
-            getUserDetails
+            getUserDetails,
+            sendMessage,
+            validateAction
         }}>
             {children}
         </MainContext.Provider>

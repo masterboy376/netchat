@@ -4,21 +4,24 @@ import { useContext, useState } from 'react'
 import { MainContext } from '../context/mainContext'
 // import MessageCard from './MessageCard'
 import Image from 'next/image'
+import MessageForm from './MessageFrom'
+// import { Router } from 'next/router'
 
 const ChatView = () => {
-    // const { router, userData, socket, messages, setMessages, friend } = useContext(MainContext)
+    const { router, messages } = useContext(MainContext)
 
-    // socket.on('receive', data => {
-    //     let tempArray = [...messages]
-    //     tempArray.push(data)
-    //     console.log(data)
-    //     setMessages(tempArray)
-    // })
-
+    
     return (
-        <div className={`flex-6 h-screen w-full relative overflow-y-scroll`}>
+        <div className={`flex flex-col h-screen w-full relative`}>
             {/* header  */}
             <ChatHeader />
+
+            <div className="flex-1 w-full my-16 sm:my-14 overflow-y-auto">
+
+            </div>
+
+            {/* message form */}
+            <MessageForm to={router.query.uid}/>
 
             {/* <div className='w-full h-full flex items-center justify-center'>
                 <Image src={'/waiting.svg'} width={400} height={400} className='mx-auto my-auto'></Image>

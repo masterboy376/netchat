@@ -50,7 +50,7 @@ const FriendList = () => {
   }, [searchValue])
 
   return (
-    <div className={`h-full w-full overflow-y-auto border-r ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
+    <div className={`h-full w-full overflow-y-auto border-r ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-white'}`}>
 
       {/* header */}
       <div className={`fixed flex items-center w-full border-b border-r ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'} bg-opacity-70 backdrop-blur-sm z-10 p-1 sm:p-2 shadow-sm`}>
@@ -71,7 +71,7 @@ const FriendList = () => {
             {
               friendsArray.length != 0 ?
                 friendsArray.map((item) => {
-                  return <FriendCard key={item.email} name={item.name} username={item.username} />
+                  return <FriendCard key={item.email} name={item.name} username={item.username} uid={item.uid} />
                 })
                 :
                 <>
