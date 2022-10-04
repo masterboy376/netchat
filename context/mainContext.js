@@ -4,7 +4,7 @@ import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
-import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, collectionGroup, getDocs } from "firebase/firestore";
+import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, collectionGroup, getDocs, where, orderBy  } from "firebase/firestore";
 import { getDatabase, ref, set, remove, query, push, child } from "firebase/database";
 import { toast } from 'react-toastify';
 
@@ -39,13 +39,14 @@ export const MainContextProvider = ({ children }) => {
 
     const router = useRouter()
     const [isDark, setIsDark] = useState(true)
+    const [user, setUser] = useState(null)
     const [friends, setFriends] = useState(null)
     const [isLeftBar, setIsLeftBar] = useState(false)
     const [isRightBar, setIsRightBar] = useState(false)
-    const [messages, setMessage] = useState([])
+    const [messages, setMessages] = useState([])
 
     //----------------------------------------------------------------------------------------
-    useEffect
+    // useEffect
     useEffect(() => {
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -69,8 +70,41 @@ export const MainContextProvider = ({ children }) => {
                         alertFailure(`${error.message}`)
                     });
             }
-          })
+        })
     }, [auth, friends]);
+
+    useEffect(() => {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                let userRef = onSnapshot(
+                    doc(db, "users", auth.currentUser.uid),
+                    (userDetails) => {
+                        setUser(userDetails.data())
+                    },
+                    (error) => {
+                        alertFailure(`${error.message}`)
+                    })
+            };
+        })
+    }, [auth, user]);
+
+    useEffect(() => {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (router.query.uid != undefined) {
+                    let q = query(collection(db, "messages"), where("from", "in", [auth.currentUser.uid, router.query.uid]));
+                    let unsubscribe = onSnapshot(q, (querySnapshot) => {
+                        let messagesArray = [];
+                        querySnapshot.forEach((doc) => {
+                            messagesArray.push(doc.data());
+                        });
+                        setMessages(messagesArray)
+                        console.log(messagesArray)
+                    });
+                }
+            }
+        })
+    }, [auth, router, friends]);
     //----------------------------------------------------------------------------------------
     // functions 
     const alertSuccess = (message) => toast.success(message, {
@@ -98,6 +132,7 @@ export const MainContextProvider = ({ children }) => {
         friends.forEach((item) => {
             if (item.uid == userId) {
                 flag = true;
+                console.log(item.uid)
             }
         })
         return flag;
@@ -335,16 +370,8 @@ export const MainContextProvider = ({ children }) => {
         }
         catch (e) {
             alertFailure("Failed to send message.")
-            alertFailure(e)
+            // alertFailure(e)
         }
-    }
-
-    const fetchMessages = async () => {
-        const museums = query(collectionGroup(db, 'messages'), where('type', '==', 'museum'));
-        const querySnapshot = await getDocs(museums);
-        querySnapshot.forEach((doc) => {
-            console.log(doc.id, ' => ', doc.data());
-        });
     }
 
     //----------------------------------------------------------------------------------------
@@ -378,7 +405,9 @@ export const MainContextProvider = ({ children }) => {
             getUserFriends,
             getUserDetails,
             sendMessage,
-            validateAction
+            validateAction,
+            messages,
+            user
         }}>
             {children}
         </MainContext.Provider>
