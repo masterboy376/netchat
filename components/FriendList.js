@@ -17,7 +17,10 @@ const FriendList = () => {
   useEffect(() => {
     setLoadingFriends(true)
     if (friends) {
+      if(friends != friendsArray){
         setFriendsArray([...friends])
+        
+      }
     }
     setLoadingFriends(false)
   }, [friends])
@@ -71,7 +74,7 @@ const FriendList = () => {
             {
               friendsArray.length != 0 ?
                 friendsArray.map((item) => {
-                  return <FriendCard key={item.email} name={item.name} username={item.username} uid={item.uid} />
+                  return <FriendCard key={item.uid} name={item.name} username={item.username} uid={item.uid} />
                 })
                 :
                 <>

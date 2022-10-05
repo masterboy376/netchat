@@ -16,13 +16,13 @@ const ChatView = () => {
             {/* header  */}
             <ChatHeader />
 
-            <div className="flex-1 w-full my-16 sm:my-14 overflow-y-auto flex flex-col px-1">
+            <div className="flex-1 w-full my-16 sm:my-14 overflow-y-auto flex flex-col px-2">
                 {
                     messages.length>0?
                     <>
                         {
                             messages.map((item)=>{
-                                return <MessageCard senderId={item.from} body={item.content} date={item.sentAt} />
+                                return <MessageCard key={item.date} senderId={item.from} body={item.content} date={item.sentAt} />
                             })
                         }
                     </>

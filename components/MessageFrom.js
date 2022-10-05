@@ -3,7 +3,7 @@ import { MainContext } from '../context/mainContext'
 import {RiSendPlaneFill} from 'react-icons/ri'
 
 const MessageForm = ({to}) => {
-  const {validateAction, auth, sendMessage, isDark, alertFailure} = useContext(MainContext)
+  const {auth, sendMessage, isDark} = useContext(MainContext)
   const [messageBody, setMessageBody] = useState('')
 
   const onChange = (e)=>{
@@ -12,12 +12,7 @@ const MessageForm = ({to}) => {
 
   const onSubmit = (e)=>{
     e.preventDefault()
-    if(validateAction(to)){
-      sendMessage(auth.currentUser.uid, to, messageBody, Date.now())
-    }
-    else{
-      alertFailure('Action denied!')
-    }
+    sendMessage(auth.currentUser.uid, to, messageBody, Date.now())
     setMessageBody('')
   }
 

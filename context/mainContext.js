@@ -4,8 +4,8 @@ import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
-import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, collectionGroup, getDocs, where, orderBy  } from "firebase/firestore";
-import { getDatabase, ref, set, remove, query, push, child } from "firebase/database";
+import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, collectionGroup, getDocs, where, orderBy } from "firebase/firestore";
+import { getDatabase, ref, set, remove, query, push, child, onValue, orderByChild, equalTo } from "firebase/database";
 import { toast } from 'react-toastify';
 
 export const MainContext = React.createContext()
@@ -32,10 +32,8 @@ export const MainContextProvider = ({ children }) => {
     // }
     const auth = getAuth(app);
     const db = getFirestore(app);
-    // const storage = getStorage(app);
     const database = getDatabase(app);
-
-    // const storageRef = ref(storage)
+    // const storage = getStorage(app);
 
     const router = useRouter()
     const [isDark, setIsDark] = useState(true)
@@ -71,7 +69,7 @@ export const MainContextProvider = ({ children }) => {
                     });
             }
         })
-    }, [auth, friends]);
+    }, [auth]);
 
     useEffect(() => {
         onAuthStateChanged(auth, (user) => {
@@ -92,11 +90,12 @@ export const MainContextProvider = ({ children }) => {
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 if (router.query.uid != undefined) {
-                    let q = query(collection(db, "messages"), where("from", "in", [auth.currentUser.uid, router.query.uid]));
-                    let unsubscribe = onSnapshot(q, (querySnapshot) => {
+                    const dbRef = query(ref(database, '/messages/'+generateRoomId(auth.currentUser.uid,router.query.uid)));
+
+                    onValue(dbRef, (snapshot) => {
                         let messagesArray = [];
-                        querySnapshot.forEach((doc) => {
-                            messagesArray.push(doc.data());
+                        snapshot.forEach((doc) => {
+                            messagesArray.push(doc.val());
                         });
                         setMessages(messagesArray)
                         console.log(messagesArray)
@@ -105,6 +104,7 @@ export const MainContextProvider = ({ children }) => {
             }
         })
     }, [auth, router, friends]);
+
     //----------------------------------------------------------------------------------------
     // functions 
     const alertSuccess = (message) => toast.success(message, {
@@ -136,6 +136,13 @@ export const MainContextProvider = ({ children }) => {
             }
         })
         return flag;
+    }
+    const generateRoomId = (str1, str2)=>{
+        const arr = [];
+        arr.push(str1.toLowerCase())
+        arr.push(str2.toLowerCase())
+        arr.sort()
+        return (arr.join("_"))
     }
 
     // sign up
@@ -361,7 +368,9 @@ export const MainContextProvider = ({ children }) => {
     //----------------------------------------------------------------------------------------
     const sendMessage = async (from, to, content, sentAt) => {
         try {
-            let docRef = await addDoc(collection(db, "messages"), {
+            const MessagesListRef = ref(database, 'messages/'+generateRoomId(from,to));
+            const newMessageRef = push(MessagesListRef);
+            set(newMessageRef, {
                 from: from,
                 to: to,
                 content: content,
@@ -370,9 +379,21 @@ export const MainContextProvider = ({ children }) => {
         }
         catch (e) {
             alertFailure("Failed to send message.")
-            // alertFailure(e)
         }
     }
+    // const sendMessage = async (from, to, content, sentAt) => {
+    //     try {
+    //         let docRef = await addDoc(collection(db, "messages"), {
+    //             from: from,
+    //             to: to,
+    //             content: content,
+    //             sentAt: sentAt
+    //         });
+    //     }
+    //     catch (e) {
+    //         alertFailure("Failed to send message.")
+    //     }
+    // }
 
     //----------------------------------------------------------------------------------------
     // const uploadFile = async (file, metadata)=>{

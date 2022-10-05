@@ -27,9 +27,9 @@ const MessageCard = ({ senderId, body, date }) => {
 
   return (
     <>
-      {sender && <div className={`${sender.uid == auth.currentUser.uid ? 'bg-gray-700 self-end' : 'bg-gray-800 self-start'} bg-opacity-70 flex rounded-xl sm:p-3 p-2 w-2/3 my-2`}>
+      {(sender && auth.currentUser) && <div className={`${sender.uid == auth.currentUser.uid ? 'bg-blue-500 self-end' : 'bg-gray-800 self-start'} bg-opacity-70 flex rounded-xl sm:p-3 p-2 w-2/3 my-2`}>
 
-        <div className={`mr-2 flex items-center rounded-full w-10 h-10 justify-center font-bold text-2xl bg-blue-500`}>
+        <div className={`mr-2 flex items-center rounded-full w-6 h-6 text-lg sm:w-10 sm:h-10 justify-center font-bold sm:text-2xl bg-blue-500`}>
           {sender.name && sender.name[0].toUpperCase()}
         </div>
 
@@ -39,7 +39,12 @@ const MessageCard = ({ senderId, body, date }) => {
               <span className="font-bold opacity-90">{sender.username}</span>
               <span className="opacity-90">{sender.name}</span>
             </div>
-            <span className="opacity-60">{date}</span>
+            <span className="opacity-60">{new Date(date).toLocaleString('en-US', {
+                  timeZone: 'PST',
+                  hour12: true,
+                  timeStyle: 'short',
+                  dateStyle: 'long',
+                })}</span>
           </div>
           <p className="my-2">{body}</p>
         </div>
