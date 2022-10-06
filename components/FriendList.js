@@ -17,13 +17,12 @@ const FriendList = () => {
   useEffect(() => {
     setLoadingFriends(true)
     if (friends) {
-      if(friends != friendsArray){
         setFriendsArray([...friends])
-        
-      }
     }
     setLoadingFriends(false)
   }, [friends])
+
+  
 
   const onChange = (e) => {
     setSearchValue(e.target.value)
