@@ -5,11 +5,14 @@ import { MainContext } from '../context/mainContext'
 import FriendList from '../components/FriendList'
 import ChatView from '../components/ChatView'
 import SideBar from '../components/SideBar'
+import AddFriend from '../components/AddFriend'
+import FriendRequests from '../components/FriendRequests'
+import Modal from 'react-modal'
 
 export default function Home() {
-  const { auth, router, isDark, isLeftBar, onAuthStateChanged } = useContext(MainContext)
+  const { auth, router, isDark, isLeftBar, onAuthStateChanged, addFriendModal, setAddFriendModal, friendRequestsModal, setFriendRequestsModal } = useContext(MainContext)
 
-  const init = async ()=>{
+  const init = async () => {
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         router.push('/signin')
@@ -20,6 +23,25 @@ export default function Home() {
   useEffect(() => {
     init()
   }, [])
+
+  const customStyles = {
+    content: {
+      top: '50%',
+      left: '50%',
+      right: 'auto',
+      bottom: 'auto',
+      transform: 'translate(-50%, -50%)',
+      backgroundColor: `${isDark?'rgb(17 ,24, 39)':'white'}`,
+      padding: 0,
+      border: `1px solid ${isDark?'rgb(31 41 55)':'rgb(229 231 235)'}`,
+      borderRadius: '15px',
+      width: '90%',
+      maxWidth: '700px',
+    },
+    overlay: {
+      backgroundColor: 'rgba(17, 24, 39, 0.5)',
+    },
+  }
 
 
   return (
@@ -43,6 +65,17 @@ export default function Home() {
           </>
         }
       </div>
+
+      <Modal isOpen={addFriendModal} onRequestClose={() => { setAddFriendModal(false) }} style={customStyles}>
+        <>
+        <AddFriend />
+        </>
+      </Modal>
+      <Modal isOpen={friendRequestsModal} onRequestClose={() => { setFriendRequestsModal(false) }} style={customStyles}>
+        <>
+        <FriendRequests />
+        </>
+      </Modal>
     </>
   )
 }

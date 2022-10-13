@@ -4,8 +4,8 @@ import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
-import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, collectionGroup, getDocs, where, orderBy } from "firebase/firestore";
-import { getDatabase, ref, set, remove, query, push, child, onValue, orderByChild, equalTo } from "firebase/database";
+import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, getDocs, where } from "firebase/firestore";
+import { getDatabase, ref, set, query, push, onValue } from "firebase/database";
 import { toast } from 'react-toastify';
 
 export const MainContext = React.createContext()
@@ -39,9 +39,12 @@ export const MainContextProvider = ({ children }) => {
     const [isDark, setIsDark] = useState(true)
     const [user, setUser] = useState(null)
     const [friends, setFriends] = useState(null)
+    const [requests, setRequests] = useState(null)
     const [isLeftBar, setIsLeftBar] = useState(false)
     const [isRightBar, setIsRightBar] = useState(false)
     const [messages, setMessages] = useState([])
+    const [addFriendModal, setAddFriendModal] = useState(false)
+    const [friendRequestsModal, setFriendRequestsModal] = useState(false)
 
     //----------------------------------------------------------------------------------------
     // useEffect
@@ -72,6 +75,12 @@ export const MainContextProvider = ({ children }) => {
     }, [auth]);
 
     useEffect(() => {
+        if (auth.currentUser && friendRequestsModal) {
+            getRequests(auth.currentUser.uid)
+        }
+    }, [friendRequestsModal]);
+
+    useEffect(() => {
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 let userRef = onSnapshot(
@@ -90,7 +99,7 @@ export const MainContextProvider = ({ children }) => {
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 if (router.query.uid != undefined) {
-                    const dbRef = query(ref(database, '/messages/'+generateRoomId(auth.currentUser.uid,router.query.uid)));
+                    const dbRef = query(ref(database, '/messages/' + generateRoomId(auth.currentUser.uid, router.query.uid)));
 
                     onValue(dbRef, (snapshot) => {
                         let messagesArray = [];
@@ -132,12 +141,11 @@ export const MainContextProvider = ({ children }) => {
         friends.forEach((item) => {
             if (item.uid == userId) {
                 flag = true;
-                console.log(item.uid)
             }
         })
         return flag;
     }
-    const generateRoomId = (str1, str2)=>{
+    const generateRoomId = (str1, str2) => {
         const arr = [];
         arr.push(str1.toLowerCase())
         arr.push(str2.toLowerCase())
@@ -236,13 +244,27 @@ export const MainContextProvider = ({ children }) => {
     // send friend request
     const sendFriendRequest = async (userId, to) => {
         try {
-            const docRef = await addDoc(collection(db, "requests"), {
-                from: userId,
-                to: to
-            });
-            alertSuccess("Friend request sent successfully!")
+            const q = query(collection(db, "requests"), where("to", "==", to), where("from", "==", userId));
+            const querySnapshot = await getDocs(q);
+            if (!(querySnapshot && querySnapshot.docs.length > 0)) {
+                const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+                if(!(docSnap.data().friends.includes(to))){
+                    const docRef = await addDoc(collection(db, "requests"), {
+                        from: userId,
+                        to: to
+                    });
+                    alertSuccess("Friend request sent successfully!")
+                    setAddFriendModal(false)
+                }
+                else{
+                alertFailure("Already a friend!")
+                }
+            }
+            else {
+                alertFailure("Friend request is already pending!")
+            }
         } catch (e) {
-            alertSuccess("Failed to send friend request!")
+            alertFailure("Failed to send friend request!")
         }
     }
 
@@ -259,6 +281,7 @@ export const MainContextProvider = ({ children }) => {
             });
             docRef = await deleteDoc(requestRef);
             alertSuccess('Successfully accepted friend request!')
+            getRequests(auth.currentUser.uid)
         }
         catch (e) {
             alertFailure(`Failed to accept friend request!`)
@@ -272,6 +295,7 @@ export const MainContextProvider = ({ children }) => {
             let docRef = null;
             docRef = await deleteDoc(requestRef);
             alertSuccess('Successfully accepted friend request!')
+            getRequests(auth.currentUser.uid)
         }
         catch (e) {
             alertFailure(`Failed to accept friend request!`)
@@ -288,6 +312,24 @@ export const MainContextProvider = ({ children }) => {
         } catch (error) {
             alertFailure(`Failed to remove the friend!`)
         }
+    }
+
+    const getRequests = async (userId) => {
+        const q = query(collection(db, "requests"), where("to", "==", userId));
+
+        const querySnapshot = await getDocs(q);
+        let arr = []
+        querySnapshot.forEach(async (doc) => {
+            let docInstance = {
+                id: doc.id,
+                from: doc.data().from,
+                to: doc.data().to
+            }
+            let fromData = await getUserDetails(doc.data().from)
+            docInstance.from = fromData
+            arr.push(docInstance)
+        });
+        setRequests(arr);
     }
 
     // get users friends
@@ -353,22 +395,21 @@ export const MainContextProvider = ({ children }) => {
     }
 
     // get user details by userId
-    const getUserDetails = (userId) => {
-        const unsubscribe = onSnapshot(
-            doc(db, "users", userId),
-            (snapshot) => {
-                console.log(snapshot.data())
-                return snapshot.data()
-            },
-            (error) => {
-                alertFailure(`${error.message}`)
-            })
+    const getUserDetails = async (userId) => {
+        const docRef = doc(db, "users", userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            return docSnap.data()
+        } else {
+            return null;
+        }
     }
 
     //----------------------------------------------------------------------------------------
     const sendMessage = async (from, to, content, sentAt) => {
         try {
-            const MessagesListRef = ref(database, 'messages/'+generateRoomId(from,to));
+            const MessagesListRef = ref(database, 'messages/' + generateRoomId(from, to));
             const newMessageRef = push(MessagesListRef);
             set(newMessageRef, {
                 from: from,
@@ -381,19 +422,6 @@ export const MainContextProvider = ({ children }) => {
             alertFailure("Failed to send message.")
         }
     }
-    // const sendMessage = async (from, to, content, sentAt) => {
-    //     try {
-    //         let docRef = await addDoc(collection(db, "messages"), {
-    //             from: from,
-    //             to: to,
-    //             content: content,
-    //             sentAt: sentAt
-    //         });
-    //     }
-    //     catch (e) {
-    //         alertFailure("Failed to send message.")
-    //     }
-    // }
 
     //----------------------------------------------------------------------------------------
     // const uploadFile = async (file, metadata)=>{
@@ -404,6 +432,7 @@ export const MainContextProvider = ({ children }) => {
         <MainContext.Provider value={{
             friends,
             setFriends,
+            requests,
             isDark,
             setIsDark,
             router,
@@ -423,12 +452,17 @@ export const MainContextProvider = ({ children }) => {
             onAuthStateChanged,
             sendFriendRequest,
             acceptFriendRequest,
+            declineFriendRequest,
             getUserFriends,
             getUserDetails,
             sendMessage,
             validateAction,
             messages,
-            user
+            user,
+            addFriendModal,
+            setAddFriendModal,
+            friendRequestsModal,
+            setFriendRequestsModal,
         }}>
             {children}
         </MainContext.Provider>

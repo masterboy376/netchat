@@ -7,7 +7,7 @@ import { FaUserPlus } from 'react-icons/fa'
 
 
 const FriendList = () => {
-  const { setIsLeftBar, isDark, friends, auth } = useContext(MainContext)
+  const { setIsLeftBar, isDark, friends, auth, setAddFriendModal } = useContext(MainContext)
 
 
   const [searchValue, setSearchValue] = useState('')
@@ -63,7 +63,7 @@ const FriendList = () => {
       </div>
 
       <div className={`p-2 pt-10 sm:pt-14`}>
-        <button type='button' className={`flex items-center justify-center text-blue-500 border-2 border-blue-500 rounded-xl w-full py-2 sm:my-3 my-5 font-medium bg-blue-500 bg-opacity-5 hover:bg-opacity-10`}><FaUserPlus size={20} className={`mr-2`} />Add friend</button>
+        <button onClick={()=>{setAddFriendModal(true)}} type='button' className={`flex items-center justify-center text-blue-500 border-2 border-blue-500 rounded-xl w-full py-2 sm:my-3 my-5 font-medium bg-blue-500 bg-opacity-5 hover:bg-opacity-10`}><FaUserPlus size={20} className={`mr-2`} />Add friend</button>
 
         <h1 className={`opacity-40 font-bold sm:my-2 my-4`}>FRIENDS</h1>
 

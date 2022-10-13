@@ -10,7 +10,7 @@ import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
 const ChatHeader = () => {
-  const { setIsLeftBar, setIsRightBar, logout, isDark, friends, getUserDetails, router } = useContext(MainContext)
+  const { setIsLeftBar, setIsRightBar, logout, isDark, friends, setFriendRequestsModal, router } = useContext(MainContext)
   const [friendDetails, setFriendDetails] = useState(null)
 
   useEffect(() => {
@@ -74,8 +74,8 @@ const ChatHeader = () => {
         </button>
       </Tippy> */}
 
-      <Tippy content={'Notifications'}>
-        <button onClick={() => { setUserModal(true) }} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer mr-4 sm:block hidden`}>
+      <Tippy content={'Friend Requests'}>
+        <button onClick={() => { setFriendRequestsModal(true) }} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer mr-4 sm:block hidden`}>
           <MdNotificationsNone size={30} className={`cursor-pointer`} />
         </button>
       </Tippy>
