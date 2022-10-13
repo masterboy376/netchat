@@ -4,7 +4,7 @@ import { MainContext } from '../context/mainContext'
 import { FaUserTimes, FaPhoneVolume, FaVideo } from 'react-icons/fa'
 
 const FriendCard = ({ username, name, uid }) => {
-    const { router, isDark } = useContext(MainContext)
+    const { removeFriend, isDark, auth } = useContext(MainContext)
     return (
         <Link href={`/?uid=${uid}`}>
             <a onClick={()=>{
@@ -20,14 +20,18 @@ const FriendCard = ({ username, name, uid }) => {
                 <div className={`flex items-center`}>
                     <button onClick={(e) => {
                         e.stopPropagation()
+                        e.preventDefault()
                         console.log('clicked')
                     }} className={`ml-2`}><FaPhoneVolume size={20} /></button>
                     <button onClick={(e) => {
                         e.stopPropagation()
+                        e.preventDefault()
                         console.log('clicked')
                     }} className={`ml-2`}><FaVideo size={20} /></button>
                     <button onClick={(e) => {
                         e.stopPropagation()
+                        e.preventDefault()
+                        removeFriend(auth.currentUser.uid, uid)
                         console.log('clicked')
                     }} className={`ml-2`}><FaUserTimes size={20} /></button>
                 </div>

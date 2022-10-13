@@ -55,15 +55,9 @@ export const MainContextProvider = ({ children }) => {
                     doc(db, "users", auth.currentUser.uid),
                     (userFriends) => {
                         let arr = []
-                        userFriends.data().friends.forEach((element) => {
-                            let userRef = onSnapshot(
-                                doc(db, "users", element),
-                                (userDetails) => {
-                                    arr.push(userDetails.data())
-                                },
-                                (error) => {
-                                    alertFailure(`${error.message}`)
-                                })
+                        userFriends.data().friends.forEach(async (element) => {
+                            let data = await getUserDetails(element)
+                            arr.push(data)
                         });
                         setFriends(arr)
                     },
@@ -308,6 +302,11 @@ export const MainContextProvider = ({ children }) => {
             let docRef = docRef = await updateDoc(doc(db, "users", userId), {
                 friends: arrayRemove(removedFriendId)
             });
+            docRef = docRef = await updateDoc(doc(db, "users", removedFriendId), {
+                friends: arrayRemove(userId)
+            });
+            let roomId = generateRoomId(userId, removedFriendId)
+            remove(ref(database, 'messages/' + roomId))
             alertSuccess(`Successfully removed the friend!`)
         } catch (error) {
             alertFailure(`Failed to remove the friend!`)
@@ -463,6 +462,7 @@ export const MainContextProvider = ({ children }) => {
             setAddFriendModal,
             friendRequestsModal,
             setFriendRequestsModal,
+            removeFriend
         }}>
             {children}
         </MainContext.Provider>
