@@ -5,7 +5,7 @@ import Head from 'next/head'
 import { MainContext } from '../context/mainContext'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 
-const signin = () => {
+const Signin = () => {
   const { signIn, signInRemember, isDark, auth, router, onAuthStateChanged } = useContext(MainContext)
 
   const [signingin, setSigningin] = useState(false)
@@ -136,7 +136,7 @@ const signin = () => {
               </button>
             </div>
             <div className="text-sm flex justify-between">
-              Don't have an account?
+              Don&apos;t have an account?
               <Link href="/signup">
                 <a disabled={signingin} className="font-medium hover:underline underline-offset-2 text-blue-600 hover:text-blue-700">
                   Register here
@@ -150,4 +150,4 @@ const signin = () => {
   )
 }
 
-export default signin
+export default Signin

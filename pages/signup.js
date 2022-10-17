@@ -5,7 +5,7 @@ import Head from 'next/head'
 import { MainContext } from '../context/mainContext'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 
-const signup = () => {
+const Signup = () => {
   const { signUp, signUpRemember, alertFailure, isDark, auth, router, onAuthStateChanged } = useContext(MainContext)
 
   const [signingup, setSigningup] = useState(false)
@@ -215,4 +215,4 @@ const signup = () => {
   )
 }
 
-export default signup
+export default Signup

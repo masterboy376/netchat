@@ -5,7 +5,7 @@ import Head from 'next/head'
 import { MainContext } from '../context/mainContext'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 
-const forgetPassword = () => {
+const ForgetPassword = () => {
   const { isDark, auth, router, onAuthStateChanged, reset } = useContext(MainContext)
 
   const [sending, setSending] = useState(false)
@@ -101,4 +101,4 @@ const forgetPassword = () => {
   )
 }
 
-export default forgetPassword
+export default ForgetPassword
