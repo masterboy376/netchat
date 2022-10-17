@@ -1,27 +1,27 @@
 import Image from 'next/image'
-// import at from '../public/icons/at.svg'
 import { useContext, useEffect, useState } from 'react'
 import { MainContext } from '../context/mainContext'
 import { HiMenuAlt2 } from 'react-icons/hi'
 import { BsThreeDotsVertical } from 'react-icons/bs'
-import { FaUserCircle, FaUserPlus, FaPhoneVolume, FaVideo } from 'react-icons/fa'
+import { FaUserCircle } from 'react-icons/fa'
+import { BsSunFill, BsMoonFill } from 'react-icons/bs'
 import { MdNotificationsNone } from 'react-icons/md'
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
 const ChatHeader = () => {
-  const { setIsLeftBar, setIsRightBar, logout, isDark, friends, setFriendRequestsModal, router } = useContext(MainContext)
+  const { setIsLeftBar, setIsRightBar, logout, isDark, setIsDark, friends, setFriendRequestsModal,setUserModal, currentFriend } = useContext(MainContext)
   const [friendDetails, setFriendDetails] = useState(null)
 
   useEffect(() => {
-    if (friends) {
+    if (friends && currentFriend) {
       friends.forEach(element => {
-        if (element.uid == router.query.uid) {
+        if (element.uid == currentFriend) {
           setFriendDetails(element)
         }
       });
     }
-  }, [router, friends])
+  }, [ friends, currentFriend])
 
 
 
@@ -46,33 +46,15 @@ const ChatHeader = () => {
         }
       </div>
 
-      {/* {router.query.user &&
-        <div className={styles.headerIconsContainer}>  
-        <Tippy content={'Phone'}>
-          <button onClick={() => { setPhoneModal(true) }} className={styles.headerItem}>
-            <FaPhoneVolume size={25} className={`opacity-70 cursor-pointer`} />
-          </button>
-        </Tippy>
-
-          <Tippy content={'Video call'}>
-            <button onClick={() => { setVideoModal(true) }} className={styles.headerItem}>
-              <FaVideo size={25} className={`opacity-70 cursor-pointer`} />
-            </button>
-          </Tippy>
-        </div>
-      }
-
-      <Tippy content={'Add friend'}>
-        <button onClick={() => { setAddFriendModal(true) }} className={styles.headerItem}>
-          <FaUserPlus size={25} className={`opacity-70 cursor-pointer`} />
+      <Tippy content={'Switch Mode'}>
+        <button onClick={() => { setIsDark(!isDark) }} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer mr-4 sm:block hidden`}>
+          {isDark?
+          <BsSunFill size={30} className={`cursor-pointer`} />
+          :
+          <BsMoonFill size={30} className={`cursor-pointer`} />
+          }
         </button>
       </Tippy>
-
-      <Tippy content={'Your details'}>
-        <button onClick={() => { setUserModal(true) }} className={styles.headerItem}>
-          <FaUserCircle size={25} className={`opacity-70 cursor-pointer`} />
-        </button>
-      </Tippy> */}
 
       <Tippy content={'Friend Requests'}>
         <button onClick={() => { setFriendRequestsModal(true) }} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer mr-4 sm:block hidden`}>

@@ -3,9 +3,10 @@ import { MainContext } from '../context/mainContext'
 import { AiOutlineClose } from 'react-icons/ai'
 import { FaUserCircle } from 'react-icons/fa'
 import { MdNotificationsNone } from 'react-icons/md'
+import { BsSunFill, BsMoonFill } from 'react-icons/bs'
 
 const MoreOption = () => {
-    const { isRightBar, setIsRightBar, logout, isDark } = useContext(MainContext)
+    const { isRightBar, setIsRightBar, logout, isDark, setIsDark, setFriendRequestsModal, setUserModal } = useContext(MainContext)
 
     return (
         <div className={`w-full transition-all duration-300 sm:hidden border-l ${isDark ? 'text-gray-300 border-gray-700 bg-gray-900 ' : 'text-gray-900 border-gray-300 bg-white'} ${isRightBar ? 'translate-x-0' : 'translate-x-full'} sm:hidden block fixed top-0 right-0 h-screen`}>
@@ -15,13 +16,24 @@ const MoreOption = () => {
                     <AiOutlineClose size={24} />
                 </div>
             </div>
-            <div className={`flex items-center p-2 rounded-md cursor-pointer mb-2 mx-2 my-2  ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}>
+            <div onClick={() => { setIsDark(!isDark) }} className={`flex items-center p-2 rounded-md cursor-pointer mb-2 mx-2 my-2  ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}>
+                <div className={`mr-2`}>
+                    {
+                        isDark?
+                        <BsSunFill size={28} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer sm:hidden`} />
+                        :
+                        <BsMoonFill size={28} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer sm:hidden`} />
+                    }
+                </div>
+                <p>Switch Mode</p>
+            </div>
+            <div onClick={() => { setFriendRequestsModal(true) }} className={`flex items-center p-2 rounded-md cursor-pointer mb-2 mx-2 my-2  ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}>
                 <div className={`mr-2`}>
                 <MdNotificationsNone size={28} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer sm:hidden`} />
                 </div>
                 <p>Notifications</p>
             </div>
-            <div className={`flex items-center p-2 rounded-md cursor-pointer mb-2 mx-2 my-2  ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}>
+            <div onClick={() => { setUserModal(true) }} className={`flex items-center p-2 rounded-md cursor-pointer mb-2 mx-2 my-2  ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}>
                 <div className={`mr-2`}>
                 <FaUserCircle size={28} className={`${isDark ? 'text-gray-300' : 'text-gray-900'} cursor-pointer sm:hidden`} />
                 </div>

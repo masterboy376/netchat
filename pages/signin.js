@@ -111,7 +111,7 @@ const signin = () => {
               </div>
 
               <div className="text-sm">
-                <Link href="/sendLink">
+                <Link href="/forgetPassword">
                   <a disabled={signingin} className="font-medium hover:underline underline-offset-2 text-blue-600 hover:text-blue-700">
                     Forgot your password?
                   </a>

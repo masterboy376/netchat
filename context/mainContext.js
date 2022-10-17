@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 // import { getStorage, ref, uploadBytes } from "firebase/storage";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, reauthenticateWithCredential, deleteUser, setPersistence, browserSessionPersistence } from "firebase/auth"; 
 import { getFirestore, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, getDoc, collection, getDocs, where } from "firebase/firestore";
 import { getDatabase, ref, set, query, push, onValue } from "firebase/database";
 import { toast } from 'react-toastify';
@@ -13,23 +13,17 @@ export const MainContext = React.createContext()
 export const MainContextProvider = ({ children }) => {
 
     const firebaseConfig = {
-        apiKey: "AIzaSyBXT9xEgYWdIk3Mto-HrT1-KXCiW89v7PE",
-        authDomain: "netchat-862e4.firebaseapp.com",
-        projectId: "netchat-862e4",
-        storageBucket: "netchat-862e4.appspot.com",
-        messagingSenderId: "641704404198",
-        appId: "1:641704404198:web:de5e2713f0ffec9a114727",
-        measurementId: "G-EV781M6FB1",
-        databaseURL: "https://netchat-862e4-default-rtdb.firebaseio.com/",
+        apiKey: process.env.NEXT_PUBLIC_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_STORAGE_BUCKET,
+        messagingSenderId: process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID,
+        appId: process.env.NEXT_PUBLIC_APP_ID,
+        measurementId: process.env.NEXT_PUBLIC_MEASUREMENT_ID,
+        databaseURL: process.env.NEXT_PUBLIC_DATABASE_URL,
     };
-    // if (firebaseConfig?.projectId) {
-    const app = initializeApp(firebaseConfig);
 
-    // if (app.name && typeof window !== 'undefined') {
-    //     const analytics = getAnalytics(app);
-    //     alertFailure(analytics)
-    // }
-    // }
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const database = getDatabase(app);
@@ -43,8 +37,10 @@ export const MainContextProvider = ({ children }) => {
     const [isLeftBar, setIsLeftBar] = useState(false)
     const [isRightBar, setIsRightBar] = useState(false)
     const [messages, setMessages] = useState([])
+    const [currentFriend, setCurrentFriend] = useState(null)
     const [addFriendModal, setAddFriendModal] = useState(false)
     const [friendRequestsModal, setFriendRequestsModal] = useState(false)
+    const [userModal, setUserModal] = useState(false)
 
     //----------------------------------------------------------------------------------------
     // useEffect
@@ -55,6 +51,7 @@ export const MainContextProvider = ({ children }) => {
                     doc(db, "users", auth.currentUser.uid),
                     (userFriends) => {
                         let arr = []
+                        console.log(userFriends.data())
                         userFriends.data().friends.forEach(async (element) => {
                             let data = await getUserDetails(element)
                             arr.push(data)
@@ -88,25 +85,6 @@ export const MainContextProvider = ({ children }) => {
             };
         })
     }, [auth, user]);
-
-    useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                if (router.query.uid != undefined) {
-                    const dbRef = query(ref(database, '/messages/' + generateRoomId(auth.currentUser.uid, router.query.uid)));
-
-                    onValue(dbRef, (snapshot) => {
-                        let messagesArray = [];
-                        snapshot.forEach((doc) => {
-                            messagesArray.push(doc.val());
-                        });
-                        setMessages(messagesArray)
-                        console.log(messagesArray)
-                    });
-                }
-            }
-        })
-    }, [auth, router, friends]);
 
     //----------------------------------------------------------------------------------------
     // functions 
@@ -145,6 +123,10 @@ export const MainContextProvider = ({ children }) => {
         arr.push(str2.toLowerCase())
         arr.sort()
         return (arr.join("_"))
+    }
+    const scrollToBottom = ()=>{
+        let viewContainer = document.getElementById('view-container');
+		viewContainer.scrollTop = viewContainer.scrollHeight;
     }
 
     // sign up
@@ -208,8 +190,8 @@ export const MainContextProvider = ({ children }) => {
     }
 
     // reset
-    const reset = (e) => {
-        sendPasswordResetEmail(auth, cred.email).then(() => {
+    const reset = (email) => {
+        sendPasswordResetEmail(auth, email).then(() => {
             alertSuccess(`Reset email sent successfully!`)
         }).catch((error) => {
             alertFailure(`${error.message}`)
@@ -217,7 +199,7 @@ export const MainContextProvider = ({ children }) => {
     }
 
     // delete user
-    const deleteAccount = (e) => {
+    const deleteAccount = () => {
         deleteUser(auth.currentUser).then(() => {
             alertSuccess(`User deleted successfully!`)
         }).catch((error) => {
@@ -226,11 +208,13 @@ export const MainContextProvider = ({ children }) => {
     }
 
     // re authenticate
-    const reAuth = (e) => {
+    const reAuth = (credential) => {
         reauthenticateWithCredential(auth.currentUser, credential).then(() => {
-            alertSuccess(`Reauthentication successfully!`)
+            return true;
+            console.log('hi')
         }).catch((error) => {
-            alertFailure(`${error.message}`)
+            console.log(error.message)
+            return false;
         });
     }
 
@@ -305,8 +289,8 @@ export const MainContextProvider = ({ children }) => {
             docRef = docRef = await updateDoc(doc(db, "users", removedFriendId), {
                 friends: arrayRemove(userId)
             });
-            let roomId = generateRoomId(userId, removedFriendId)
-            remove(ref(database, 'messages/' + roomId))
+            // let roomId = generateRoomId(userId, removedFriendId)
+            // await remove(ref(database, '/messages/' + roomId))
             alertSuccess(`Successfully removed the friend!`)
         } catch (error) {
             alertFailure(`Failed to remove the friend!`)
@@ -421,11 +405,21 @@ export const MainContextProvider = ({ children }) => {
             alertFailure("Failed to send message.")
         }
     }
+    
+    const getMessages = (user1, user2)=>{
+        const dbRef = query(ref(database, '/messages/' + generateRoomId(user1, user2)));
+        
+        onValue(dbRef, (snapshot) => {
+            let messagesArray = [];
+            snapshot.forEach((doc) => {
+                messagesArray.push(doc.val());
+            });
+            setMessages(messagesArray)
+            scrollToBottom()
+        });
+    }
 
     //----------------------------------------------------------------------------------------
-    // const uploadFile = async (file, metadata)=>{
-    //     constuploadBytes(storageRef, file, metadata);
-    // }
 
     return (
         <MainContext.Provider value={{
@@ -462,7 +456,16 @@ export const MainContextProvider = ({ children }) => {
             setAddFriendModal,
             friendRequestsModal,
             setFriendRequestsModal,
-            removeFriend
+            removeFriend,
+            reset,
+            userModal,
+            setUserModal,
+            updateProfile,
+            reAuth,
+            getMessages,
+            currentFriend, 
+            setCurrentFriend,
+            scrollToBottom
         }}>
             {children}
         </MainContext.Provider>

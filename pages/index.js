@@ -8,9 +8,10 @@ import SideBar from '../components/SideBar'
 import AddFriend from '../components/AddFriend'
 import FriendRequests from '../components/FriendRequests'
 import Modal from 'react-modal'
+import UserDetails from '../components/UserDetails'
 
 export default function Home() {
-  const { auth, router, isDark, isLeftBar, onAuthStateChanged, addFriendModal, setAddFriendModal, friendRequestsModal, setFriendRequestsModal } = useContext(MainContext)
+  const { auth, router, isDark, isLeftBar, onAuthStateChanged, addFriendModal, setAddFriendModal, friendRequestsModal, setFriendRequestsModal, userModal, setUserModal } = useContext(MainContext)
 
   const init = async () => {
     onAuthStateChanged(auth, (user) => {
@@ -74,6 +75,11 @@ export default function Home() {
       <Modal isOpen={friendRequestsModal} onRequestClose={() => { setFriendRequestsModal(false) }} style={customStyles}>
         <>
         <FriendRequests />
+        </>
+      </Modal>
+      <Modal isOpen={userModal} onRequestClose={() => { setUserModal(false) }} style={customStyles}>
+        <>
+        <UserDetails />
         </>
       </Modal>
     </>

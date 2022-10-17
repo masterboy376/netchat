@@ -17,7 +17,7 @@ const FriendList = () => {
   useEffect(() => {
     setLoadingFriends(true)
     if (friends) {
-        setFriendsArray([...friends])
+        setFriendsArray(friends)
     }
     setLoadingFriends(false)
   }, [friends])
